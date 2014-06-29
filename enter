@@ -1,0 +1,51 @@
+#!/bin/bash
+# Entrypoint script for Discourse
+# -*- mode: sh -*-
+
+set -e
+
+ARGV=$@
+
+function setup {
+    set -x
+
+    # Bring up the database to most recent state
+    bundle exec rake db:create
+    bundle exec rake db:migrate
+
+    # Recompile assets
+    time bundle exec rake assets:precompile
+    set +x
+}
+
+function configure_from_env {
+    # You are expected to configure via environment variables;
+    # For external services we introduce new vars here to specify
+    # host:port in one go.
+    IFS=':' read -ra ADDR <<< "$POSTGRES"
+    export DISCOURSE_DB_HOST=${ADDR[0]}
+    export DISCOURSE_DB_PORT=${ADDR[1]}
+
+    IFS=':' read -ra ADDR <<< "$REDIS"
+    export DISCOURSE_REDIS_HOST=${ADDR[0]}
+    export DISCOURSE_REDIS_PORT=${ADDR[1]}
+}
+
+configure_from_env
+
+if [ "$1" == "web" ]; then
+    setup
+    echo "+ bundle exec rails server"a
+    echo "bundle exec rails server -p ${PORT:-3000}" | exec bash
+elif [ "$1" == "sidekiq" ]; then
+    setup
+    echo "+ bundle exec sidekiq"
+    echo "bundle exec sidekiq" | exec bash
+else
+    cat <<EOF
+No command specified. Valid commands include:
+
+  * web: Run the rails web server
+  * sidekiq: Run the sidekiq worker
+EOF
+fi

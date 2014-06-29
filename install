@@ -1,0 +1,47 @@
+# -*- sh -*-
+# Discourse installer.
+
+set -ex
+
+sed 's/main$/main universe/' -i /etc/apt/sources.list
+apt-get -qy update
+apt-get -qy install git
+
+# Get discourse stable tag
+git clone --depth 1 https://github.com/discourse/discourse.git
+cd discourse
+
+git checkout v$DISCOURSE_VERSION
+
+# We don't care about having .git on an ephemeral filesystem.
+rm -rf .git
+
+# https://bugs.launchpad.net/ubuntu/+source/lxc/+bug/813398
+apt-get -qy install language-pack-en
+locale-gen en_US.UTF-8
+dpkg-reconfigure locales
+
+# The setup commands belong adhere to the official instructions at,
+# https://github.com/discourse/discourse/blob/master/docs/INSTALL-ubuntu.md
+#
+
+apt-get -qy install build-essential libssl-dev libyaml-dev git libtool \
+    libxslt-dev libxml2-dev libpq-dev gawk curl pngcrush imagemagick \
+    python-software-properties
+
+# Discourse setup
+#
+
+# Install Ruby 2.0.0 (not bothering to use RVM)
+add-apt-repository ppa:brightbox/ruby-ng-experimental
+apt-get -qy update
+apt-get -qy install ruby2.0 ruby2.0-dev
+
+echo "gem: --no-ri --no-rdoc" > ~/.gemrc
+gem install bundler
+
+bundle install --deployment --without test
+
+# cleanup apt cache to save image space
+apt-get -qy autoclean
+apt-get -qy clean
