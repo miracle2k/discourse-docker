@@ -33,12 +33,12 @@ function configure_from_env {
 
 configure_from_env
 
-if [ "$1" == "web" ]; then
+if [ "$1" == "setup" ]; then
     setup
+elif [ "$1" == "web" ]; then
     echo "+ bundle exec rails server"a
     echo "bundle exec rails server -p ${PORT:-3000}" | exec bash
 elif [ "$1" == "sidekiq" ]; then
-    setup
     echo "+ bundle exec sidekiq"
     echo "bundle exec sidekiq" | exec bash
 else
