@@ -14,6 +14,12 @@ function setup {
     bundle exec rake db:migrate
 
     # Recompile assets
+    compile_assets
+    set +x
+}
+
+function compile_assets {
+    set -x
     time bundle exec rake assets:precompile
     set +x
 }
@@ -36,7 +42,10 @@ configure_from_env
 if [ "$1" == "setup" ]; then
     setup
 elif [ "$1" == "web" ]; then
-    echo "+ bundle exec rails server"a
+    if [ "$DISCOURSE_SERVE_STATIC_ASSETS" != "" ]; then
+        compile_assets
+    fi
+    echo "+ bundle exec rails server"
     echo "bundle exec rails server -p ${PORT:-3000}" | exec bash
 elif [ "$1" == "sidekiq" ]; then
     echo "+ bundle exec sidekiq"
