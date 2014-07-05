@@ -3,7 +3,8 @@
 FROM ubuntu:12.04
 MAINTAINER elsdoerfer
 
-RUN  echo 'Acquire::http { Proxy "http://192.168.59.103:3142"; };' >> /etc/apt/apt.conf.d/01proxy
+# Enable this during development.
+#RUN echo 'Acquire::http { Proxy "http://192.168.59.103:3142"; };' >> /etc/apt/apt.conf.d/01proxy
 
 ENV DISCOURSE_VERSION 0.9.9.10
 ENV RAILS_ENV production
